@@ -15,15 +15,18 @@ ZODIAC_SIGNS = [
 FREQUENCIES = ["daily", "weekly", "monthly"]
 
 def get_horoscope(sign, freq):
-    if freq == 'daily':
-        url = f"https://horoscope-app-api.vercel.app/api/v1/get-horoscope/daily?sign={sign}&day=today"
-    else:
-        url = f"https://horoscope-app-api.vercel.app/api/v1/get-horoscope/{freq}?sign={sign}"
-    response = requests.get(url)
-    if response.status_code == 200:
-        data = response.json()
-        return data['data']['horoscope_data']
-    else:
+    try:
+        if freq == 'daily':
+            url = f"https://horoscope-app-api.vercel.app/api/v1/get-horoscope/daily?sign={sign}&day=today"
+        else:
+            url = f"https://horoscope-app-api.vercel.app/api/v1/get-horoscope/{freq}?sign={sign}"
+        response = requests.get(url)
+        if response.status_code == 200:
+            data = response.json()
+            return data['data']['horoscope_data']
+        else:
+            return "Could not fetch horoscope."
+    except:
         return "Could not fetch horoscope."
 
 def get_tarot_cards(num_cards=3):
@@ -34,21 +37,22 @@ def get_tarot_cards(num_cards=3):
         if response.status_code == 200:
             return response.json()['cards']
     except:
-        return [
-            {"name": "The Star", "meaning_up": "Hope, inspiration, and spiritual guidance"},
-            {"name": "Three of Cups", "meaning_up": "Friendship, celebration, and community"},
-            {"name": "Ace of Pentacles", "meaning_up": "New opportunities and material success"}
-        ]
-    return []
+        pass
+    return [
+        {"name": "The Star", "meaning_up": "Hope, inspiration, and spiritual guidance"},
+        {"name": "Three of Cups", "meaning_up": "Friendship, celebration, and community"},
+        {"name": "Ace of Pentacles", "meaning_up": "New opportunities and material success"}
+    ]
 
 def combined_reading_with_gemini(horoscope_text, tarot_cards):
     """Create a structured fortune reading combining horoscope and tarot cards"""
-    client = genai.Client()
-    
-    tarot_summary = "\n".join([f"• {card['name']}: {card['meaning_up']}" for card in tarot_cards])
-    card_names = ", ".join([card['name'] for card in tarot_cards])
-    
-    prompt = f"""
+    try:
+        client = genai.Client()
+        
+        tarot_summary = "\n".join([f"• {card['name']}: {card['meaning_up']}" for card in tarot_cards])
+        card_names = ", ".join([card['name'] for card in tarot_cards])
+        
+        prompt = f"""
 Create a comprehensive mystical fortune reading with exactly these three sections. Keep it concise but clearly separated:
 
 🌟 SECTION 1: Your Horoscope Foundation
@@ -75,12 +79,15 @@ IMPORTANT FORMATTING RULES:
 - Make sure sections are clearly distinct
 """
 
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=prompt
-    )
-    
-    return response.text
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt
+        )
+        
+        return response.text
+    except Exception as e:
+        # Return None to signal error occurred
+        return None
 
 HTML_TEMPLATE = """
 <!doctype html>
@@ -271,12 +278,31 @@ HTML_TEMPLATE = """
             white-space: pre-line;
         }
         
+        .error-container {
+            background: rgba(255, 107, 107, 0.2);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-top: 30px;
+            border: 1px solid rgba(255, 107, 107, 0.4);
+            text-align: center;
+            line-height: 1.6;
+        }
+        
         .result-title {
             font-family: 'Cinzel', serif;
             font-size: 1.8rem;
             margin-bottom: 20px;
             text-align: center;
             color: #e0c3fc;
+        }
+        
+        .error-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #ffcccb;
         }
         
         .loading {
@@ -388,6 +414,13 @@ HTML_TEMPLATE = """
             <div>{{ reading }}</div>
         </div>
         {% endif %}
+        
+        {% if error_message %}
+        <div class="error-container">
+            <h3 class="error-title">🌟 Celestial Message 🌟</h3>
+            <div>{{ error_message }}</div>
+        </div>
+        {% endif %}
     </div>
     
     <script>
@@ -443,26 +476,36 @@ def get_zodiac_symbol(sign):
 @app.route('/', methods=['GET', 'POST'])
 def home():
     reading = None
+    error_message = None
     selected_sign = "aries"
     selected_freq = "daily"
+    
     if request.method == 'POST':
-        selected_sign = request.form.get('sign')
-        selected_freq = request.form.get('freq')
-        cards_drawn = request.form.get('cards_drawn') == 'true'
+        try:
+            selected_sign = request.form.get('sign')
+            selected_freq = request.form.get('freq')
+            cards_drawn = request.form.get('cards_drawn') == 'true'
+            
+            if cards_drawn:
+                # Get horoscope
+                raw_text = get_horoscope(selected_sign, selected_freq)
+                
+                # Get tarot cards (3 random ones from API)
+                tarot_cards = get_tarot_cards(3)
+                
+                # Create combined reading
+                reading = combined_reading_with_gemini(raw_text, tarot_cards)
+                
+                if reading is None:
+                    error_message = "🌟 The cosmic energies are currently depleted from many seekers today. The mystical AI needs time to recharge under the starlight. Please return tomorrow when the celestial forces have realigned! ✨"
         
-        if cards_drawn:
-            # Get horoscope
-            raw_text = get_horoscope(selected_sign, selected_freq)
-            
-            # Get tarot cards (3 random ones from API)
-            tarot_cards = get_tarot_cards(3)
-            
-            # Create combined reading
-            reading = combined_reading_with_gemini(raw_text, tarot_cards)
+        except Exception as e:
+            error_message = "🌟 The stars are experiencing some turbulence right now. Please try again in a moment when the cosmic winds calm. ✨"
     
     return render_template_string(
         HTML_TEMPLATE, signs=ZODIAC_SIGNS, freqs=FREQUENCIES,
-        reading=reading, selected_sign=selected_sign, selected_freq=selected_freq, 
+        reading=reading, error_message=error_message,
+        selected_sign=selected_sign, selected_freq=selected_freq, 
         get_zodiac_symbol=get_zodiac_symbol
     )
 
