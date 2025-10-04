@@ -98,6 +98,11 @@ HTML_TEMPLATE = """
     <title>✨ Mystic AI ✨</title>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;700&family=Cinzel:wght@400;600&display=swap" rel="stylesheet">
     <style>
+        html, body {
+            min-height: 100vh;
+            height: 100%;
+        }
+        
         * {
             margin: 0;
             padding: 0;
@@ -105,6 +110,7 @@ HTML_TEMPLATE = """
         }
         
         body {
+            background: #764ba2; /* Fallback solid purple */
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             font-family: 'Quicksand', sans-serif;
@@ -132,13 +138,14 @@ HTML_TEMPLATE = """
         }
         
         .form-container {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(60, 24, 90, 0.85); /* Less transparent, richer purple */
             backdrop-filter: blur(10px);
             border-radius: 20px;
             padding: 40px;
             margin: 30px auto;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
             box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            color: #fff;
         }
         
         .form-group {
@@ -159,13 +166,13 @@ HTML_TEMPLATE = """
             padding: 15px 20px;
             border: none;
             border-radius: 25px;
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.95);
             color: #333;
             font-size: 1rem;
             font-family: 'Quicksand', sans-serif;
             text-align: center;
             text-align-last: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
             transition: all 0.3s ease;
             appearance: none;
             background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 5"><path fill="%23666" d="m0 1 2 2 2-2z"/></svg>');
@@ -202,14 +209,14 @@ HTML_TEMPLATE = """
             height: 180px;
             background: linear-gradient(45deg, #4a148c, #7b1fa2);
             border-radius: 15px;
-            border: 3px solid rgba(255,255,255,0.4);
+            border: 3px solid rgba(255,255,255,0.5);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: space-between;
             padding: 15px;
             color: white;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
         }
         
         .deck-card:nth-child(1) { transform: rotate(-2deg) translate(-2px, 2px); }
@@ -222,13 +229,15 @@ HTML_TEMPLATE = """
             font-size: 14px;
             text-align: center;
             margin-top: 10px;
-            color: #e0c3fc;
+            color: #fff;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
         }
         
         .card-count {
             margin: 10px 0;
             font-size: 0.9rem;
-            color: #e0c3fc;
+            color: #fff;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
         }
         
         .submit-btn {
@@ -241,13 +250,14 @@ HTML_TEMPLATE = """
             border-radius: 25px;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
             font-family: 'Quicksand', sans-serif;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
         }
         
         .submit-btn:hover {
             transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(238, 90, 111, 0.4);
+            box-shadow: 0 8px 25px rgba(238, 90, 111, 0.5);
         }
         
         .submit-btn:disabled {
@@ -267,7 +277,7 @@ HTML_TEMPLATE = """
         }
         
         .result-container {
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(60, 24, 90, 0.85); /* Less transparent, richer purple */
             backdrop-filter: blur(15px);
             border-radius: 20px;
             padding: 30px;
@@ -276,10 +286,11 @@ HTML_TEMPLATE = """
             text-align: left;
             line-height: 1.6;
             white-space: pre-line;
+            color: #fff;
         }
         
         .error-container {
-            background: rgba(255, 107, 107, 0.2);
+            background: rgba(120, 24, 60, 0.85); /* Less transparent, richer purple-red */
             backdrop-filter: blur(15px);
             border-radius: 20px;
             padding: 30px;
@@ -287,6 +298,7 @@ HTML_TEMPLATE = """
             border: 1px solid rgba(255, 107, 107, 0.4);
             text-align: center;
             line-height: 1.6;
+            color: #fff;
         }
         
         .result-title {
@@ -294,7 +306,8 @@ HTML_TEMPLATE = """
             font-size: 1.8rem;
             margin-bottom: 20px;
             text-align: center;
-            color: #e0c3fc;
+            color: #fff;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
         }
         
         .error-title {
@@ -302,7 +315,8 @@ HTML_TEMPLATE = """
             font-size: 1.8rem;
             margin-bottom: 20px;
             text-align: center;
-            color: #ffcccb;
+            color: #fff;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
         }
         
         .loading {
@@ -346,6 +360,15 @@ HTML_TEMPLATE = """
         @keyframes twinkle {
             0%, 100% { opacity: 0.3; }
             50% { opacity: 1; }
+        }
+        
+        /* Mobile Safari specific fixes */
+        @supports (-webkit-touch-callout: none) {
+            .form-container,
+            .result-container,
+            .error-container {
+                background: rgba(60, 24, 90, 0.95); /* More opaque for Safari */
+            }
         }
     </style>
 </head>
